@@ -9,6 +9,10 @@ ENV ARMBINURL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/
 VOLUME /havoc
 WORKDIR /havoc/firmware
 
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates
+RUN sed -i "s@http://archive.ubuntu.com@https://mirrors.ustc.edu.cn@g" /etc/apt/sources.list
+RUN sed -i "s@http://security.ubuntu.com@https://mirrors.ustc.edu.cn@g" /etc/apt/sources.list
+
 # Fetch dependencies from APT
 RUN apt-get update \
  && apt-get install -y git tar wget dfu-util cmake python3 ccache bzip2 liblz4-tool curl ninja-build \
@@ -36,6 +40,7 @@ RUN mkdir /opt/build \
  && tar --strip=1 -xjvf gcc-arm-none-eabi -C armbin
 
 ADD firmware/tools/docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # replace make with ninja temporarily while building your image if you prefer to use that by default
