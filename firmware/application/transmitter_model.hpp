@@ -44,6 +44,7 @@ class TransmitterModel {
         uint8_t tx_gain_db = 35;
         bool rf_amp = false;
     };
+    bool enabled_ = false;
 
     /* The frequency to transmit on. */
     rf::Frequency target_frequency() const;
@@ -80,7 +81,6 @@ class TransmitterModel {
 
    private:
     settings_t settings_{};
-    bool enabled_ = false;
     SignalToken signal_token_tick_second{};
 
     void update_tuning_frequency();

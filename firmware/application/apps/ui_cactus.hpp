@@ -49,14 +49,34 @@ namespace ui
 
         Labels labels{
             {{1 * 8, 4 * 8}, "Time Interval:", Theme::getInstance()->fg_light->foreground},
-            {{20 * 8, 4 * 8}, "ms", Theme::getInstance()->fg_light->foreground},};
+            {{21 * 8, 4 * 8}, "s", Theme::getInstance()->fg_light->foreground},};
 
-        NumberField interval_nf{
+        class MilliToDecField : public NumberField
+        {
+        public:
+            MilliToDecField(Point parent_pos, int length, range_t range, int32_t step, char fill_char, bool can_loop)
+            : NumberField(parent_pos, length, range, step, fill_char, can_loop){}
+
+            void virtual paint(Painter& painter) {
+                //const auto text = to_string_decimal(value()/1000.0, 1) + " ";
+                const auto text = to_string_dec_int(value()/1000) + "." + to_string_dec_int((value()%1000)/100) + " ";
+
+                const auto paint_style = has_focus() ? style().invert() : style();
+
+                painter.draw_string(
+                    screen_pos(),
+                    paint_style,
+                    text);
+            }
+        };
+
+        MilliToDecField interval_nf{
             {16 * 8, 4 * 8},
-            5,
-            {2000, 20000},
+            4,
+            {5000, 20000},
             100,
-            ' '};
+            ' ',
+            true};
 
         //Button button_1{
         //    {19, 204, 96, 24},
@@ -125,11 +145,96 @@ namespace ui
         Button button_O{{16 * 8, 17 * 16, 6 * 8, 16 + 8}, "O"};
         Button button_P{{24 * 8, 17 * 16, 6 * 8, 16 + 8}, "P"};
     */
+        Button button_all{{4 * 8, 11 * 16, 8 * 8, 16 + 16}, "ALL ON"};
+        Button button_off{{16 * 8, 11 * 16, 8 * 8, 16 + 16}, "ALL OFF"};
     //bool allow_tx = false;
     Thread* testthread{nullptr};
     void on_hide();
     void test(int i);
     void terminate_test();
+    };
+
+    class CactusDbgView : public View                                // App class declaration
+    {
+    public:
+        CactusDbgView(NavigationView &nav, Rect parent_rect);
+        CactusDbgView(const CactusDbgView&) = delete;
+        CactusDbgView(CactusDbgView&&) = delete;
+        CactusDbgView& operator=(const CactusDbgView&) = delete;
+        CactusDbgView& operator=(CactusDbgView&&) = delete;
+        ~CactusDbgView();
+        void focus() override;
+
+    private:
+        Labels labels{
+            {{0 * 8, 2 * 16}, "trunk1:", Theme::getInstance()->fg_light->foreground},
+            {{16 * 8, 2 * 16}, "trunk2:", Theme::getInstance()->fg_light->foreground},
+            {{0 * 8, 4 * 16}, "trunk3:", Theme::getInstance()->fg_light->foreground},
+            {{16 * 8, 4 * 16}, "trunk4:", Theme::getInstance()->fg_light->foreground},
+            {{0 * 8, 6 * 16}, "trunk5:", Theme::getInstance()->fg_light->foreground},
+            {{16 * 8, 6 * 16}, "trunk6:", Theme::getInstance()->fg_light->foreground},};
+
+        NumberField trunk1_nf{
+            {8 * 8, 2 * 16},
+            3,
+            {0, 255},
+            1,
+            ' ',
+            true};
+
+        NumberField trunk2_nf{
+            {24 * 8, 2 * 16},
+            3,
+            {0, 255},
+            1,
+            ' ',
+            true};
+
+        NumberField trunk3_nf{
+            {8 * 8, 4 * 16},
+            3,
+            {0, 255},
+            1,
+            ' ',
+            true};
+
+        NumberField trunk4_nf{
+            {24 * 8, 4 * 16},
+            3,
+            {0, 255},
+            1,
+            ' ',
+            true};
+
+        NumberField trunk5_nf{
+            {8 * 8, 6 * 16},
+            3,
+            {0, 255},
+            1,
+            ' ',
+            true};
+
+        NumberField trunk6_nf{
+            {24 * 8, 6 * 16},
+            3,
+            {0, 255},
+            1,
+            ' ',
+            true};
+
+        Button button_send{{72, 160, 96, 48}, "SEND"};
+
+        uint8_t trunk1_v{0};
+        uint8_t trunk2_v{255};
+        uint8_t trunk3_v{255};
+        uint8_t trunk4_v{255};
+        uint8_t trunk5_v{0};
+        uint8_t trunk6_v{0};
+
+        //bool allow_tx = false;
+        Thread* testthread{nullptr};
+        void on_hide();
+        void send_code();
     };
 
     class CactusView : public View                                // App class declaration
@@ -148,10 +253,12 @@ namespace ui
 
         CactusTxView view_tx{nav_, view_rect};
         CactusTestView view_test{nav_, view_rect};
+        CactusDbgView view_dbg{nav_, view_rect};
 
         TabView tab_view{
             {"TX", Theme::getInstance()->fg_cyan->foreground, &view_tx},
             {"test", Theme::getInstance()->fg_green->foreground, &view_test},
+            {"debug", Theme::getInstance()->fg_green->foreground, &view_dbg},
         };
         TransmitterView2 tx_view2{
             {48, 264},

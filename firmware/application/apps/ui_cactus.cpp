@@ -15,7 +15,7 @@ namespace ui
     //const std::bitset<97> unlock("1110100010001110100011101000111010001000100010001000111010001110111010001110111010001000100011101");
     //const std::bitset<97> start("1110100010001110100011101000111010001000100010001000111010001110111010001110111010001110100010001");
     //const std::bitset<97> warning("1110100010001110100011101000111010001000100010001000111010001110111010001110111011101000100010001");
-
+/*
     class bitset_tx {
     public:
         bitset_tx(const std::bitset<56>& bits) :
@@ -197,6 +197,105 @@ namespace ui
     );
 
     const light_codes lights[8] = {light_a, light_b, light_c, light_d, light_e, light_f, light_g, light_h};
+*/
+
+    //unsigned int select             { 0b0000000000000000 };
+    const uint16_t stick_a{ 1 << 8 };
+    const uint16_t stick_b{ 1 << 9 };
+    const uint16_t stick_c{ 1 << 10 };
+    const uint16_t stick_d{ 1 << 11 };
+    const uint16_t stick_e{ 1 << 12 };
+    const uint16_t stick_f{ 1 << 13 };
+    const uint16_t stick_g{ 1 << 14 };
+    const uint16_t stick_h{ 1 << 15 };
+    const uint16_t stick_i{ 1 };
+    const uint16_t stick_j{ 1 << 1 };
+    const uint16_t stick_k{ 1 << 2 };
+    const uint16_t stick_l{ 1 << 3 };
+    const uint16_t stick_m{ 1 << 4 };
+    const uint16_t stick_n{ 1 << 5 };
+    const uint16_t stick_o{ 1 << 6 };
+    const uint16_t stick_p{ 1 << 7 };
+    const uint16_t stick_all{ (1 << 16) - 1 };
+
+
+    const uint8_t eight_ones{ 0b11111111 };
+
+    //unsigned int func               { 0b00000001 };
+    const uint8_t func_off{ 0b00000000 };
+    const uint8_t func_on{ 0b00000001 };
+    const uint8_t func_slow{ 0b00000010 };
+    const uint8_t func_medium{ 0b00000011 };
+    const uint8_t func_fast{ 0b00000100 };
+    const uint8_t func_fade_in{ 0b00000101 };
+    const uint8_t func_fade_out{ 0b00000110 };
+    const uint8_t func_short_long{ 0b00001010 };
+    const uint8_t func_current{ 0b00001011 };
+    const uint8_t func_long_short{ 0b00001100 };
+    //const uint8_t func_steady{ 0b00000001 };
+
+    //unsigned int color              { 0b00000000 };
+    const uint8_t color_current{ 0b10101010 };
+    const uint8_t color_red{ 0b00000000 };
+    const uint8_t color_green{ 0b00000001 };
+    const uint8_t color_blue{ 0b00000010 };
+    const uint8_t color_white{ 0b00000100 };
+    const uint8_t color_yellow{ 0b00000101 };
+
+    static uint64_t calc_code(uint8_t trunk1, uint8_t trunk2, uint8_t trunk3, uint8_t trunk4, uint8_t trunk5, uint8_t trunk6) {
+        uint8_t checksum = (trunk1 + trunk2 + trunk3 + trunk4 + trunk5 + trunk6 + (uint8_t)0b10010110) & eight_ones;
+        return ((uint64_t)trunk1 << 48) | ((uint64_t)trunk2 << 40) | ((uint64_t)trunk3 << 32) | ((uint64_t)trunk4 << 24)
+            | ((uint64_t)trunk5 << 16) | ((uint64_t)trunk6 << 8) | checksum;
+    }
+
+    static uint64_t calc_light_code(uint16_t select, uint8_t func, uint8_t color) {
+        return calc_code((uint8_t)0, (uint8_t)(select >> 8), (uint8_t)(select & eight_ones), eight_ones, func, color);
+    }
+
+    static const std::string code_to_string(uint64_t code) {
+        std::bitset<56 * 3> result;
+        const std::bitset<56 * 3> bs{ code };
+        const std::bitset<56 * 3> prefix{ 0b010 };
+        const std::bitset<56 * 3> one{ 0b1 };
+        for (int i = 56 - 1; i > 0 - 1; i--) {
+            result |= (((bs >> i) & one) | prefix) << i * 3;
+        }
+        const std::bitset<17> padding_lead{ 0b11111111000011110 };
+        const std::bitset<3> padding_tail{ 0b000 };
+        return padding_lead.to_string() + result.to_string() + padding_tail.to_string();
+    }
+
+    static const std::string get_trunks_string(uint8_t trunk1, uint8_t trunk2, uint8_t trunk3, uint8_t trunk4, uint8_t trunk5, uint8_t trunk6) {
+        const uint64_t code{ calc_code(trunk1, trunk2, trunk3, trunk4, trunk5, trunk6) };
+        return code_to_string(code);
+    }
+
+    static const std::string get_light_string(uint16_t select, uint8_t func, uint8_t color) {
+        const uint64_t code{ calc_light_code(select, func, color) };
+        return code_to_string(code);
+    }
+
+    static const std::string get_separate_light_string(uint8_t stick_light[8]) {
+        const uint8_t trunk1 {0b11000000};
+        const uint8_t trunk2 = stick_light[0] << 4 | (stick_light[1] & 0b1111);
+        const uint8_t trunk3 = stick_light[2] << 4 | (stick_light[3] & 0b1111);
+        const uint8_t trunk4 = stick_light[4] << 4 | (stick_light[5] & 0b1111);
+        const uint8_t trunk5 = stick_light[6] << 4 | (stick_light[7] & 0b1111);
+        return get_trunks_string(trunk1, trunk2, trunk3, trunk4, trunk5, 0);
+    }
+
+    const uint16_t sticks[17] = {
+        stick_a, stick_b, stick_c, stick_d, stick_e, stick_f, stick_g, stick_h,
+        stick_i, stick_j, stick_k, stick_l, stick_m, stick_n, stick_o, stick_p, stick_all,
+    };
+    const uint16_t sticks_not[17] = {
+        stick_all - stick_a, stick_all - stick_b, stick_all - stick_c, stick_all - stick_d, 
+        stick_all - stick_e, stick_all - stick_f, stick_all - stick_g, stick_all - stick_h, 
+        stick_all - stick_i, stick_all - stick_j, stick_all - stick_k, stick_all - stick_l, 
+        stick_all - stick_m, stick_all - stick_n, stick_all - stick_o, stick_all - stick_p, 
+        stick_all - stick_all,
+    };
+    
 
     //CactusTxView::CactusTxView(NavigationView &nav) // Application Main
     //{
@@ -210,19 +309,23 @@ namespace ui
 
 #define OOK_SAMPLERATE 2000000U
 
-    void start_tx(std::string& message)              // Message input as "101101"
+    static void enable_tx(){
+        transmitter_model.set_target_frequency(433920000);       // Center frequency in hz
+        transmitter_model.set_sampling_rate(OOK_SAMPLERATE);     // (2280000) Value from encoders.hpp
+        //transmitter_model.set_tx_gain(24);
+        //transmitter_model.set_rf_amp(false);                      // RF amp on
+        transmitter_model.set_baseband_bandwidth(2000000);       // Bandwidth
+        if (!transmitter_model.enabled_) 
+            transmitter_model.enable();                              // Radio enable
+    }
+
+    static void start_tx(std::string& message)              // Message input as "101101"
     {
         size_t bitstream_length = encoders::make_bitstream(message);       // Function from encoders.hpp. Encodes then 
                                                                   // sets message to TX data pointer via... 	
                                                                   // uint8_t * bitstream = shared_memory.bb_data.data; 
                                                                   // on line 34 of encoders.cpp and returns length. 
 
-        transmitter_model.set_target_frequency(433920000);       // Center frequency in hz
-        transmitter_model.set_sampling_rate(OOK_SAMPLERATE);     // (2280000) Value from encoders.hpp
-        //transmitter_model.set_tx_gain(24);
-        //transmitter_model.set_rf_amp(false);                      // RF amp on
-        transmitter_model.set_baseband_bandwidth(2000000);       // Bandwidth
-        transmitter_model.enable();                              // Radio enable
 
         baseband::set_ook_data(                                  // ASK/OOK TX function
             bitstream_length,                                    // Length of message
@@ -232,7 +335,7 @@ namespace ui
         );
     }
 
-    void stop_tx()                                    // Stop TX function
+    static void stop_tx()                                    // Stop TX function
     {
         baseband::kill_ook();
         transmitter_model.disable();                              // Disable transmitter_model
@@ -240,22 +343,39 @@ namespace ui
         // Add UI logic to let the user know the TX has stoped 
     } 
 
-    void send_msg(const std::string& message)
+    static void send_msg(const std::string& message)
     {
         std::string msg = message;
         start_tx(msg);
     }
 
-    int gen_rand(int x)
+    static int gen_rand(int x)
     {
         std::srand(LPC_RTC->CTIME0);
         return std::rand() / ((RAND_MAX + 1u) / x);
     }
 
     static msg_t testthread_fn(void* arg){
+        enable_tx();
         int i = (int) arg;
-        send_msg(lights[i].white.tx_string() + lights[i].compl_off.tx_string());
+        if (i >= 0) {
+            //send_msg(lights[i].white.tx_string() + lights[i].compl_off.tx_string());
+            send_msg(
+                get_light_string(sticks[i], func_fade_in, color_white) 
+                + get_light_string(sticks_not[i], func_fade_out, color_current)
+                + get_light_string(sticks_not[i], func_off, color_current)
+                //+ get_light_string(sticks[i], func_fade_out, color_white) 
+            );
+        } else {
+            send_msg(
+                get_light_string(stick_all, func_fade_out, color_current) 
+                + get_light_string(stick_all, func_off, color_current)
+            );
+        }
+
         chThdExit(0);
+        chThdSleepMilliseconds(750);
+        stop_tx();
         return 0;
     }
 
@@ -321,9 +441,11 @@ namespace ui
         chThdExit(0);
         return 0;
         */
-        int phase = 2;
+        enable_tx();
+        int phase = 0; //2;
         int current = 0;
-        long long time_prev = -1000000;
+        long long time_init = arg_c->timer_scr;
+        long long time_prev = 0; //-1000000;
         long long time_now = 0;
         double elapsed = 0;
         int i = 0;
@@ -331,24 +453,37 @@ namespace ui
         {
             if (chThdShouldTerminate()) break;
             time_now = arg_c->timer_scr;
+            painter.draw_string({100, 40}, *Theme::getInstance()->bg_darkest, to_string_decimal((time_now-time_init)/60.0, 1)+"   ");
             elapsed = (time_now - time_prev) / 60 * 1000;
+
+            /*
             if (phase == 0)
             {
-                current = gen_rand(8);
-                send_msg(lights[current].red.tx_string() 
-                + lights[current].compl_off.tx_string()
-                + lights[current].medium.tx_string());
+                //send_msg(lights[current].red.tx_string() 
+                //+ lights[current].compl_off.tx_string()
+                //+ lights[current].medium.tx_string());
+                send_msg(
+                    //get_light_string(sticks[current], func_medium, color_red)
+                    //+ 
+                    get_light_string(sticks_not[current], func_off, color_current)
+                );
                 phase += 1;
             }
             else if (phase == 1 && elapsed >= arg_c->interval * 0.667)
             {
-                send_msg(lights[current].fast.tx_string());
+                //send_msg(lights[current].fast.tx_string());
+                send_msg(get_light_string(sticks[current], func_medium, color_current));
                 phase += 1;
             }
             else if (phase == 2 && elapsed >= arg_c->interval)
             {
+                current = gen_rand(8);
                 time_prev = arg_c->timer_scr;
-                send_msg(light_all.green.tx_string());
+                //send_msg(light_all.green.tx_string());
+                //send_msg(get_light_string(stick_all, func_on, color_green));
+                uint8_t stick_light[8] = {color_green, color_green, color_green, color_green, color_green, color_green, color_green, color_green};
+                stick_light[current] = color_red;
+                send_msg(get_separate_light_string(stick_light));
                 phase += 1;
             }
             else if (phase == 3 && elapsed >= 1000)
@@ -360,12 +495,44 @@ namespace ui
             {
                 chThdSleepMilliseconds(100);
             }
+            */
+
+            if (phase == 0) {
+                current = gen_rand(8);
+                time_prev = arg_c->timer_scr;
+                uint8_t stick_light[8] = {color_green, color_green, color_green, color_green, color_green, color_green, color_green, color_green};
+                stick_light[current] = color_red;
+                send_msg(get_separate_light_string(stick_light));
+                phase += 1;
+            }
+            else if (phase == 1 && elapsed >= 1000) {
+                send_msg(get_light_string(sticks_not[current], func_off, color_current));
+                phase += 1;
+            }
+            else if (phase == 2 && elapsed >= arg_c->interval * 0.333) {
+                send_msg(get_light_string(sticks[current], func_medium, color_red));
+                phase += 1;
+            }
+            else if (phase == 3 && elapsed >= arg_c->interval * 0.667) {
+                send_msg(get_light_string(sticks[current], func_fast, color_current));
+                phase += 1;
+            }
+            else if (phase == 4 && elapsed >= arg_c->interval) {
+                phase = 0;
+            }
+            else {
+                chThdSleepMilliseconds(50);
+            }
+
             //painter.draw_string({100, 80}, *Theme::getInstance()->bg_darkest, std::to_string(std::llround(elapsed)));
-            painter.draw_string({100, 60}, *Theme::getInstance()->bg_darkest, std::to_string(phase));
+            painter.draw_string({100, 60}, *Theme::getInstance()->bg_darkest, to_string_dec_int(phase));
+            //painter.draw_string({100, 40}, *Theme::getInstance()->bg_darkest, to_string_decimal(i/100.0, 1));
             i++;
-            painter.draw_string({100, 40}, *Theme::getInstance()->bg_darkest, std::to_string(i));
         }
+        send_msg(get_light_string(stick_all, func_slow, color_blue));
         chThdExit(0);
+        chThdSleepMilliseconds(250);
+        stop_tx();
         return 0;
     }
 
@@ -510,6 +677,8 @@ namespace ui
                     &button_f,
                     &button_g,
                     &button_h,
+                    &button_all,
+                    &button_off,
                     });
 
     button_a.on_select = [this](const ui::Button&) {
@@ -543,7 +712,16 @@ namespace ui
     button_h.on_select = [this](const ui::Button&) {
             test(7);
         };
+
+    button_all.on_select = [this](const ui::Button&) {
+            test(16);
+        };
+
+    button_off.on_select = [this](const ui::Button&) {
+            test(-1);
+        };
     }
+
 
     CactusTestView::~CactusTestView() {
         terminate_test();
@@ -571,6 +749,69 @@ namespace ui
         stop_tx();
     }
 
+    CactusDbgView::CactusDbgView(NavigationView &nav, Rect parent_rect)
+    {
+        set_parent_rect(parent_rect);
+        hidden(true);
+
+        add_children({&labels,
+                    &trunk1_nf,
+                    &trunk2_nf,
+                    &trunk3_nf,
+                    &trunk4_nf,
+                    &trunk5_nf,
+                    &trunk6_nf,
+                    &button_send,
+                    });
+
+        button_send.on_select = [this](const ui::Button&) {
+            send_code();
+        };
+
+        trunk1_nf.on_change = [this](int32_t v) {
+            trunk1_v = v;
+        };
+        trunk2_nf.on_change = [this](int32_t v) {
+            trunk2_v = v;
+        };
+        trunk3_nf.on_change = [this](int32_t v) {
+            trunk3_v = v;
+        };
+        trunk4_nf.on_change = [this](int32_t v) {
+            trunk4_v = v;
+        };
+        trunk5_nf.on_change = [this](int32_t v) {
+            trunk5_v = v;
+        };
+        trunk6_nf.on_change = [this](int32_t v) {
+            trunk6_v = v;
+        };
+        
+        trunk1_nf.set_value(trunk1_v);
+        trunk2_nf.set_value(trunk2_v);
+        trunk3_nf.set_value(trunk3_v);
+        trunk4_nf.set_value(trunk4_v);
+        trunk5_nf.set_value(trunk5_v);
+        trunk6_nf.set_value(trunk6_v);
+    }
+
+    CactusDbgView::~CactusDbgView() {
+        transmitter_model.disable();
+    }
+
+    void CactusDbgView::focus() {
+        trunk5_nf.focus();
+    }
+
+    void CactusDbgView::send_code() {
+        enable_tx();
+        send_msg(get_trunks_string(trunk1_v, trunk2_v, trunk3_v, trunk4_v, trunk5_v, trunk6_v));
+    }
+
+    void CactusDbgView::on_hide() {
+        stop_tx();
+    }
+
     CactusView::CactusView(
         NavigationView& nav)
         : nav_{nav} {
@@ -579,6 +820,7 @@ namespace ui
         add_children({&tab_view,
                     &view_tx,
                     &view_test,
+                    &view_dbg,
                     &tx_view2,
                     });
     }
