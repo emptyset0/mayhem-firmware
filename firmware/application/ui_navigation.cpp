@@ -85,6 +85,7 @@
 #include "ui_whipcalc.hpp"
 #include "ui_battinfo.hpp"
 #include "ui_external_items_menu_loader.hpp"
+#include "ui_cactus.hpp"
 
 // #include "acars_app.hpp"
 #include "ais_app.hpp"
@@ -207,6 +208,7 @@ const NavigationView::AppList NavigationView::appList = {
     // Dangerous apps.
     {nullptr, "Flash Utility", UTILITIES, Color::red(), &bitmap_icon_temperature, new ViewFactory<FlashUtilityView>()},
     {nullptr, "Wipe SD card", UTILITIES, Color::red(), &bitmap_icon_tools_wipesd, new ViewFactory<WipeSDView>()},
+    {"cactus", "Cactus", TX, Color::green(), &bitmap_icon_cactus, new ViewFactory<CactusView>()},
 };
 
 const NavigationView::AppMap NavigationView::appMap = generate_app_map(NavigationView::appList);

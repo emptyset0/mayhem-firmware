@@ -5911,6 +5911,44 @@ static constexpr Bitmap bitmap_icon_clean{
     {16, 16},
     bitmap_icon_clean_data};
 
+static constexpr uint8_t bitmap_icon_cactus_data[] = {
+    0x80,
+    0x01,
+    0x40,
+    0x02,
+    0x20,
+    0x24,
+    0x20,
+    0x55,
+    0x64,
+    0x54,
+    0x2A,
+    0x56,
+    0xAA,
+    0x54,
+    0x2A,
+    0x48,
+    0x2A,
+    0x21,
+    0x12,
+    0x14,
+    0x84,
+    0x08,
+    0x28,
+    0x04,
+    0x10,
+    0x05,
+    0x20,
+    0x04,
+    0xA0,
+    0x04,
+    0x20,
+    0x06,
+};
+static constexpr Bitmap bitmap_icon_cactus{
+    {16, 16},
+    bitmap_icon_cactus_data};
+
 } /* namespace ui */
 
 #endif /*__BITMAP_HPP__*/
